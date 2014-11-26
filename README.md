@@ -22,9 +22,12 @@ CRUD:
 * Document
 * DeleteDocument
 
-Queries:
+Process:
 
 * Bulk
+
+Queries:
+
 * Search
 * Suggest
 
