@@ -1,4 +1,4 @@
-# Elasticsearch
+# Elasticsearch with go (golang)
 
 A minimalistic elasticsearch client in Go (golang).
 
