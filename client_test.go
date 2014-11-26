@@ -11,7 +11,7 @@ var (
 	ProductDocumentType       = "PRODUCT"
 	ESScheme                  = "http"
 	ESHost                    = "localhost"
-	ESPort                    = "9201"
+	ESPort                    = "9200"
 	ESSearchIndexName         = "search"
 	ESRecommendationIndexName = "recommendation"
 	IndexName                 = "test"
