@@ -29,6 +29,7 @@ Process:
 Queries:
 
 * Search
+* Multi Search
 * Suggest
 
 ## Compatibility

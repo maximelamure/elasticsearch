@@ -97,7 +97,7 @@ type SearchResult struct {
 // MSearchQuery Multi Search query
 type MSearchQuery struct {
 	Header string // index name, document type
-	Body   string // query related to the decalred index
+	Body   string // query related to the declared index
 }
 
 // MSearchQuery Multi search result
