@@ -93,3 +93,14 @@ type SearchResult struct {
 		} `json:"hits"`
 	} `json:"hits"`
 }
+
+// MSearchQuery Multi Search query
+type MSearchQuery struct {
+	Header string // index name, document type
+	Body   string // query related to the decalred index
+}
+
+// MSearchQuery Multi search result
+type MSearchResult struct {
+	Responses []SearchResult `json:"responses"`
+}
