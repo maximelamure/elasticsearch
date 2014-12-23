@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 )
 
 // Searcher set the contract to manage indices, synchronize data and request
@@ -23,6 +24,7 @@ type Searcher interface {
 	DeleteDocument(indexName, documentType, identifier string) (*Document, error)
 	Bulk(data []byte) (*Bulk, error)
 	Search(indexName, documentType, data string) (*SearchResult, error)
+	MSearch(queries []MSearchQuery) (*MSearchResult, error)
 	Suggest(indexName, data string) ([]byte, error)
 }
 
@@ -239,6 +241,33 @@ func (client *SearchClient) Search(indexName, documentType, data string) (*Searc
 	err = json.Unmarshal(response, esResp)
 	if err != nil {
 		return &SearchResult{}, err
+	}
+
+	return esResp, nil
+}
+
+// MSearch allows to execute a multi-search and get back result
+// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/search-multi-search.html
+func (client *SearchClient) MSearch(queries []MSearchQuery) (*MSearchResult, error) {
+	replacer := strings.NewReplacer("\n", " ")
+	queriesList := make([]string, len(queries))
+	for i, query := range queries {
+		queriesList[i] = query.Header + "\n" + replacer.Replace(query.Body)
+	}
+
+	mSearchQuery := strings.Join(queriesList, "\n") + "\n" // Don't forget trailing \n
+	url := client.Host.String() + "/_msearch"
+	reader := bytes.NewBufferString(mSearchQuery)
+	response, err := sendHTTPRequest("POST", url, reader)
+
+	if err != nil {
+		return &MSearchResult{}, err
+	}
+
+	esResp := &MSearchResult{}
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return &MSearchResult{}, err
 	}
 
 	return esResp, nil

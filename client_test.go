@@ -163,6 +163,17 @@ func TestSearch(t *testing.T) {
 	helper.OK(t, err)
 	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
 
+	//MSearch
+
+	mqueries := make([]MSearchQuery, 2)
+	mqueries[0] = MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{ "query": {"match_all" : {}}, "from" : 0, "size" : 1} }`}
+	mqueries[1] = MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 2}}`}
+
+	msresult, err := client.MSearch(mqueries)
+	helper.OK(t, err)
+	helper.Assert(t, msresult.Responses[0].Hits.Total == 1, "The msearch doesn't return all matched items")
+	helper.Assert(t, msresult.Responses[1].Hits.Total == 2, "The msearch doesn't return all matched items")
+
 	//Delete the index
 	deleteResponse, err := client.DeleteIndex(IndexName)
 	helper.OK(t, err)
