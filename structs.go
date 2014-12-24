@@ -81,17 +81,19 @@ type SearchResult struct {
 		Successful int `json:"successful"`
 		Failed     int `json:"failed"`
 	} `json:"_shards"`
-	Hits struct {
-		Total    int     `json:"total"`
-		MaxScore float32 `json:"max_score"`
-		Hits     []struct {
-			Index     string              `json:"_index"`
-			Type      string              `json:"_type"`
-			ID        string              `json:"_id"`
-			Score     float32             `json:"_score"`
-			Source    json.RawMessage     `json:"_source"`
-			Highlight map[string][]string `json:"highlight,omitempty"`
-		} `json:"hits"`
+	Hits ResultHits `json:"hits"`
+}
+
+// SearchResult represents the result of the search operation
+type ResultHits struct {
+	Total    int     `json:"total"`
+	MaxScore float32 `json:"max_score"`
+	Hits     []struct {
+		Index  string          `json:"_index"`
+		Type   string          `json:"_type"`
+		ID     string          `json:"_id"`
+		Score  float32         `json:"_score"`
+		Source json.RawMessage `json:"_source"`
 	} `json:"hits"`
 }
 
