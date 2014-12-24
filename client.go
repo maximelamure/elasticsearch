@@ -23,7 +23,7 @@ type Searcher interface {
 	Document(indexName, documentType, identifier string) (*Document, error)
 	DeleteDocument(indexName, documentType, identifier string) (*Document, error)
 	Bulk(data []byte) (*Bulk, error)
-	Search(indexName, documentType, data string) (*SearchResult, error)
+	Search(indexName, documentType, data string, explain bool) (*SearchResult, error)
 	MSearch(queries []MSearchQuery) (*MSearchResult, error)
 	Suggest(indexName, data string) ([]byte, error)
 }
@@ -225,12 +225,15 @@ func (client *searchClient) Bulk(data []byte) (*Bulk, error) {
 
 // Search allows to execute a search query and get back search hits that match the query
 // http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/docs-delete.html
-func (client *searchClient) Search(indexName, documentType, data string) (*SearchResult, error) {
+func (client *searchClient) Search(indexName, documentType, data string, explain bool) (*SearchResult, error) {
 	if len(documentType) > 0 {
 		documentType = documentType + "/"
 	}
 
 	url := client.Host.String() + "/" + indexName + "/" + documentType + "/_search"
+	if explain {
+		url += "?explain"
+	}
 	reader := bytes.NewBufferString(data)
 	response, err := sendHTTPRequest("POST", url, reader)
 	if err != nil {
