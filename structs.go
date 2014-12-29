@@ -84,7 +84,7 @@ type SearchResult struct {
 	Hits ResultHits `json:"hits"`
 }
 
-// SearchResult represents the result of the search operation
+// ResultHits represents the result of the search hits
 type ResultHits struct {
 	Total    int     `json:"total"`
 	MaxScore float32 `json:"max_score"`
@@ -103,7 +103,7 @@ type MSearchQuery struct {
 	Body   string // query related to the declared index
 }
 
-// MSearchQuery Multi search result
+// MSearchResult Multi search result
 type MSearchResult struct {
 	Responses []SearchResult `json:"responses"`
 }
