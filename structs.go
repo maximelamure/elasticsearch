@@ -81,7 +81,8 @@ type SearchResult struct {
 		Successful int `json:"successful"`
 		Failed     int `json:"failed"`
 	} `json:"_shards"`
-	Hits ResultHits `json:"hits"`
+	Hits         ResultHits      `json:"hits"`
+	Aggregations json.RawMessage `json:"aggregations"`
 }
 
 // ResultHits represents the result of the search hits
