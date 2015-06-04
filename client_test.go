@@ -1,10 +1,12 @@
-package elasticsearch
+package elasticsearch_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"testing"
 	"time"
+
+	"github.com/maximelamure/elasticsearch"
 )
 
 var (
@@ -15,9 +17,9 @@ var (
 	ESSearchIndexName         = "search"
 	ESRecommendationIndexName = "recommendation"
 	IndexName                 = "test"
-	IndexMapping              = `{"settings": 
+	IndexMapping              = `{"settings":
 									{
-										"number_of_shards" : 5, 
+										"number_of_shards" : 5,
 										"number_of_replicas" : 1
 									}
 								  }`
@@ -38,7 +40,7 @@ var (
 
 func TestIndexManagement(t *testing.T) {
 	helper := Test{}
-	client := NewSearchClient(ESScheme, ESHost, ESPort)
+	client := elasticsearch.NewClient(ESScheme, ESHost, ESPort)
 
 	//If the index exists, remove it
 	if response, _ := client.IndexExists(IndexName); response {
@@ -81,7 +83,7 @@ func TestCRUD(t *testing.T) {
 	}
 
 	helper := Test{}
-	client := NewSearchClient(ESScheme, ESHost, ESPort)
+	client := elasticsearch.NewClient(ESScheme, ESHost, ESPort)
 	//Create the index
 	client.CreateIndex(IndexName, IndexMapping)
 
@@ -137,7 +139,7 @@ func TestSearch(t *testing.T) {
 		Product{Name: "Shirt", ID: "3", Colors: []string{"brown", "blue"}},
 	}
 	helper := Test{}
-	client := NewSearchClient(ESScheme, ESHost, ESPort)
+	client := elasticsearch.NewClient(ESScheme, ESHost, ESPort)
 	client.CreateIndex(IndexName, IndexMapping)
 
 	//Bulk
@@ -159,15 +161,15 @@ func TestSearch(t *testing.T) {
 	time.Sleep(1500 * time.Millisecond)
 
 	//Search
-	search, err := client.Search(IndexName, ProductDocumentType, SearchByColorQuery("red"))
+	search, err := client.Search(IndexName, ProductDocumentType, SearchByColorQuery("red"), false)
 	helper.OK(t, err)
 	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
 
 	//MSearch
 
-	mqueries := make([]MSearchQuery, 2)
-	mqueries[0] = MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{ "query": {"match_all" : {}}, "from" : 0, "size" : 1} }`}
-	mqueries[1] = MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 2}}`}
+	mqueries := make([]elasticsearch.MSearchQuery, 2)
+	mqueries[0] = elasticsearch.MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{ "query": {"match_all" : {}}, "from" : 0, "size" : 1} }`}
+	mqueries[1] = elasticsearch.MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 2}}`}
 
 	msresult, err := client.MSearch(mqueries)
 	helper.OK(t, err)
@@ -182,9 +184,9 @@ func TestSearch(t *testing.T) {
 
 func BulkIndexConstant(indexName, documentType, id string) string {
 
-	return `{"index": 
-				{ "_index": "` + indexName + `", 
-				"_type": "` + documentType + `", 
+	return `{"index":
+				{ "_index": "` + indexName + `",
+				"_type": "` + documentType + `",
 				"_id": "` + id + `"
 				}
 			}`
@@ -238,7 +240,7 @@ func TestSuggestion(t *testing.T) {
 	}
 
 	helper := Test{}
-	client := NewSearchClient(ESScheme, ESHost, ESPort)
+	client := elasticsearch.NewClient(ESScheme, ESHost, ESPort)
 	client.CreateIndex(SuggestionIndexName, SuggestionIndexMapping)
 
 	//Add Data
