@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -40,6 +41,16 @@ func NewClient(scheme, host, port string) Client {
 		Host:   host + ":" + port,
 	}
 	return &client{Host: u}
+}
+
+// NewSearchClient creates and initializes a new ElasticSearch client, implements core api for Indexing and searching.
+func NewClientFromUrl(rawurl string) Client {
+	u, err := url.Parse(rawurl)
+	if err != nil {
+		log.Fatal(err)
+		return nil
+	}
+	return &client{Host: *u}
 }
 
 // CreateIndex instantiates an index
