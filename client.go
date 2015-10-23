@@ -343,26 +343,20 @@ func (c *client) UpdateAlias(remove []string, add []string, alias string) (*Resp
 }
 
 func getAliasQuery(remove []string, add []string, alias string) string {
-	var buffer bytes.Buffer
+	actions := make([]string, len(remove)+len(add))
 
 	i := 0
-	if len(remove) > 0 {
-
-		for ; i < len(remove)-1; i++ {
-			buffer.WriteString("{ \"remove\": { \"index\": \"" + remove[i] + "\", \"alias\": \"" + alias + "\" }},")
-		}
-		buffer.WriteString("{ \"add\": { \"index\": \"" + remove[i] + "\", \"alias\": \"" + alias + "\" }}")
+	for _, index := range remove {
+		actions[i] = "{ \"remove\": { \"index\": \"" + index + "\", \"alias\": \"" + alias + "\" }}"
+		i++
 	}
 
-	i = 0
-	if len(add) > 0 {
-		for ; i < len(add)-1; i++ {
-			buffer.WriteString("{ \"add\": { \"index\": \"" + add[i] + "\", \"alias\": \"" + alias + "\" }},")
-		}
-		buffer.WriteString("{ \"add\": { \"index\": \"" + add[i] + "\", \"alias\": \"" + alias + "\" }}")
+	for _, index := range add {
+		actions[i] = "{ \"add\": { \"index\": \"" + index + "\", \"alias\": \"" + alias + "\" }}"
+		i++
 	}
 
-	return "{\"actions\": [ " + buffer.String() + " ]}"
+	return "{\"actions\": [ " + strings.Join(actions, ",") + " ]}"
 }
 
 func sendHTTPRequest(method, url string, body io.Reader) ([]byte, error) {
