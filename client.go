@@ -27,6 +27,8 @@ type Client interface {
 	Search(indexName, documentType, data string, explain bool) (*SearchResult, error)
 	MSearch(queries []MSearchQuery) (*MSearchResult, error)
 	Suggest(indexName, data string) ([]byte, error)
+	GetIndicesFromAlias(alias string) ([]string, error)
+	UpdateAlias(remove []string, add []string, alias string) (*Response, error)
 }
 
 // A SearchClient describes the client configuration to manage an ElasticSearch index.
@@ -294,6 +296,73 @@ func (c *client) Suggest(indexName, data string) ([]byte, error) {
 	reader := bytes.NewBufferString(data)
 	response, err := sendHTTPRequest("POST", url, reader)
 	return response, err
+}
+
+// GetIndicesFromAlias returns the list of indices the alias points to
+func (c *client) GetIndicesFromAlias(alias string) ([]string, error) {
+	url := c.Host.String() + "/*/_alias/" + alias
+	response, err := sendHTTPRequest("GET", url, nil)
+	if err != nil {
+		return []string{}, err
+	}
+
+	esResp := make(map[string]*json.RawMessage)
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return []string{}, err
+	}
+
+	indices := make([]string, len(esResp))
+	i := 0
+	for k := range esResp {
+		indices[i] = k
+		i++
+	}
+	return indices, nil
+}
+
+// UpdateAlias updates the indices on which the alias point to.
+// The change is atomic.
+func (c *client) UpdateAlias(remove []string, add []string, alias string) (*Response, error) {
+	url := c.Host.String() + "/_aliases"
+	body := getAliasQuery(remove, add, alias)
+	reader := bytes.NewBufferString(body)
+
+	response, err := sendHTTPRequest("POST", url, reader)
+	if err != nil {
+		return &Response{}, err
+	}
+
+	esResp := &Response{}
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return &Response{}, err
+	}
+
+	return esResp, nil
+}
+
+func getAliasQuery(remove []string, add []string, alias string) string {
+	var buffer bytes.Buffer
+
+	i := 0
+	if len(remove) > 0 {
+
+		for ; i < len(remove)-1; i++ {
+			buffer.WriteString("{ \"remove\": { \"index\": \"" + remove[i] + "\", \"alias\": \"" + alias + "\" }},")
+		}
+		buffer.WriteString("{ \"add\": { \"index\": \"" + remove[i] + "\", \"alias\": \"" + alias + "\" }}")
+	}
+
+	i = 0
+	if len(add) > 0 {
+		for ; i < len(add)-1; i++ {
+			buffer.WriteString("{ \"add\": { \"index\": \"" + add[i] + "\", \"alias\": \"" + alias + "\" }},")
+		}
+		buffer.WriteString("{ \"add\": { \"index\": \"" + add[i] + "\", \"alias\": \"" + alias + "\" }}")
+	}
+
+	return "{\"actions\": [ " + buffer.String() + " ]}"
 }
 
 func sendHTTPRequest(method, url string, body io.Reader) ([]byte, error) {
