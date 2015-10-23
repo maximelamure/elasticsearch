@@ -307,7 +307,7 @@ func (c *client) GetIndicesFromAlias(alias string) ([]string, error) {
 	}
 
 	esResp := make(map[string]*json.RawMessage)
-	err = json.Unmarshal(response, esResp)
+	err = json.Unmarshal(response, &esResp)
 	if err != nil {
 		return []string{}, err
 	}
