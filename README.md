@@ -15,6 +15,8 @@ Index management:
 * IndexSettings
 * IndexExists
 * Status
+* GetIndicesFromAlias
+* UpdateAlias
 
 CRUD:
 
