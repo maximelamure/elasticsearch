@@ -3,14 +3,17 @@ package elasticsearch_test
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/maximelamure/elasticsearch"
+	// "github.com/maximelamure/elasticsearch"
+	"github.com/walm/elasticsearch"
 )
 
 var (
 	ProductDocumentType       = "PRODUCT"
+	ProductMapping            = `{ "properties": { "colors": { "type": "string" } } }`
 	ESScheme                  = "http"
 	ESHost                    = "localhost"
 	ESPort                    = "9200"
@@ -63,6 +66,21 @@ func TestIndexManagement(t *testing.T) {
 	response, err = client.IndexExists(IndexName)
 	helper.OK(t, err)
 	helper.Assert(t, response, "Index has not been created with the CreateIndex function")
+
+	//Get mappings for type
+	mappings, err := client.GetMapping(IndexName, ProductDocumentType)
+	helper.OK(t, err)
+	helper.Assert(t, string(mappings) == "{}", "Mappings is not empty")
+
+	//Update mappings for type
+	mappingsResponse, err := client.PutMapping(IndexName, ProductDocumentType, ProductMapping)
+	helper.OK(t, err)
+	helper.Assert(t, mappingsResponse.Acknowledged, "Mappings has not been updated")
+
+	//Get updated mappings type
+	mappings, err = client.GetMapping(IndexName, ProductDocumentType)
+	helper.OK(t, err)
+	helper.Assert(t, strings.Contains(string(mappings), `{"colors":{"type":"string"}`), "Mappings has not been updated")
 
 	//Delete the index
 	deleteResponse, err := client.DeleteIndex(IndexName)

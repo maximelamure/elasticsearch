@@ -19,6 +19,8 @@ type Client interface {
 	UpdateIndexSetting(indexName, mapping string) (*Response, error)
 	IndexSettings(indexName string) (Settings, error)
 	IndexExists(indexName string) (bool, error)
+	GetMapping(indexName, datatype string) ([]byte, error)
+	PutMapping(indexName, datatype, mapping string) (*Response, error)
 	Status(indices string) (*Settings, error)
 	InsertDocument(indexName, documentType, identifier string, data []byte) (*InsertDocument, error)
 	Document(indexName, documentType, identifier string) (*Document, error)
@@ -142,6 +144,29 @@ func (c *client) IndexExists(indexName string) (bool, error) {
 	}
 
 	return newReq.StatusCode == http.StatusOK, nil
+}
+
+func (c *client) GetMapping(indexName, datatype string) ([]byte, error) {
+	url := c.Host.String() + "/" + indexName + "/_mapping/" + datatype
+	response, err := sendHTTPRequest("GET", url, nil)
+	return response, err
+}
+
+func (c *client) PutMapping(indexName, datatype, mapping string) (*Response, error) {
+	url := c.Host.String() + "/" + indexName + "/_mapping/" + datatype
+	reader := bytes.NewBufferString(mapping)
+	response, err := sendHTTPRequest("PUT", url, reader)
+	if err != nil {
+		return &Response{}, err
+	}
+
+	esResp := &Response{}
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return &Response{}, err
+	}
+
+	return esResp, nil
 }
 
 // Status allows to get a comprehensive status information
