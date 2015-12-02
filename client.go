@@ -28,6 +28,8 @@ type Client interface {
 	Bulk(data []byte) (*Bulk, error)
 	Search(indexName, documentType, data string, explain bool) (*SearchResult, error)
 	MSearch(queries []MSearchQuery) (*MSearchResult, error)
+	CreateSearchTemplate(name, template string) (*Response, error)
+	SearchTemplate(indexName, data string, explain bool) (*SearchResult, error)
 	Suggest(indexName, data string) ([]byte, error)
 	GetIndicesFromAlias(alias string) ([]string, error)
 	UpdateAlias(remove []string, add []string, alias string) (*Response, error)
@@ -309,6 +311,45 @@ func (c *client) MSearch(queries []MSearchQuery) (*MSearchResult, error) {
 	err = json.Unmarshal(response, esResp)
 	if err != nil {
 		return &MSearchResult{}, err
+	}
+
+	return esResp, nil
+}
+
+// CreateSearchTemplate add new stored search template
+func (c *client) CreateSearchTemplate(name, template string) (*Response, error) {
+	url := c.Host.String() + "/_search/template/" + name
+	reader := bytes.NewBufferString(template)
+	response, err := sendHTTPRequest("POST", url, reader)
+	if err != nil {
+		return &Response{}, err
+	}
+
+	esResp := &Response{}
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return &Response{}, err
+	}
+
+	return esResp, nil
+}
+
+// SearchTemplate allows to execute search with search template
+func (c *client) SearchTemplate(indexName, data string, explain bool) (*SearchResult, error) {
+	url := c.Host.String() + "/" + indexName + "/_search/template"
+	if explain {
+		url += "?explain"
+	}
+	reader := bytes.NewBufferString(data)
+	response, err := sendHTTPRequest("POST", url, reader)
+	if err != nil {
+		return &SearchResult{}, err
+	}
+
+	esResp := &SearchResult{}
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return &SearchResult{}, err
 	}
 
 	return esResp, nil

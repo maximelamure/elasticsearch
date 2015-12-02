@@ -184,8 +184,15 @@ func TestSearch(t *testing.T) {
 	helper.OK(t, err)
 	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
 
-	//MSearch
+	//SearchTemplate
+	_, err = client.CreateSearchTemplate("colorSearch", SearchTemplateColorSearch())
+	helper.Assert(t, err == nil, "Can't create search template colorSearch")
 
+	search, err = client.SearchTemplate(IndexName, SearchByColorSearchTemplate(), false)
+	helper.OK(t, err)
+	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
+
+	//MSearch
 	mqueries := make([]elasticsearch.MSearchQuery, 2)
 	mqueries[0] = elasticsearch.MSearchQuery{Header: `{ "index": "` + IndexName + `", "type": "` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 1}`}
 	mqueries[1] = elasticsearch.MSearchQuery{Header: `{ "index": "` + IndexName + `", "type": "` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 2}`}
@@ -215,6 +222,19 @@ func SearchByColorQuery(color string) string {
 					    }
 					}
 			}`
+}
+
+func SearchTemplateColorSearch() string {
+	return `{ "template": { "query": { "match": { "Colors": "{{color}}" } } } }`
+}
+
+func SearchByColorSearchTemplate() string {
+	return `{
+		"id": "colorSearch",
+		"params": {
+			"color": "red"
+		}
+	}`
 }
 
 func TestSuggestion(t *testing.T) {
