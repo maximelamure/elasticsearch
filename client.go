@@ -14,9 +14,9 @@ import (
 
 // Searcher set the contract to manage indices, synchronize data and request
 type Client interface {
-	CreateIndex(indexName, mapping string) (*Response, error)
+	CreateIndex(indexName, settings string) (*Response, error)
 	DeleteIndex(indexName string) (*Response, error)
-	UpdateIndexSetting(indexName, mapping string) (*Response, error)
+	UpdateIndexSetting(indexName, settings string) (*Response, error)
 	IndexSettings(indexName string) (Settings, error)
 	IndexExists(indexName string) (bool, error)
 	GetMapping(indexName, datatype string) ([]byte, error)
@@ -60,11 +60,11 @@ func NewClientFromUrl(rawurl string) Client {
 }
 
 // CreateIndex instantiates an index
-// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-create-index.html
-func (c *client) CreateIndex(indexName, mapping string) (*Response, error) {
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-create-index.html
+func (c *client) CreateIndex(indexName, settings string) (*Response, error) {
 	url := c.Host.String() + "/" + indexName
-	reader := bytes.NewBufferString(mapping)
-	response, err := sendHTTPRequest("POST", url, reader)
+	reader := bytes.NewBufferString(settings)
+	response, err := sendHTTPRequest("PUT", url, reader)
 	if err != nil {
 		return &Response{}, err
 	}
@@ -79,7 +79,7 @@ func (c *client) CreateIndex(indexName, mapping string) (*Response, error) {
 }
 
 // DeleteIndex deletes an existing index.
-// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-delete-index.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-delete-index.html
 func (c *client) DeleteIndex(indexName string) (*Response, error) {
 	url := c.Host.String() + "/" + indexName
 	response, err := sendHTTPRequest("DELETE", url, nil)
@@ -97,10 +97,10 @@ func (c *client) DeleteIndex(indexName string) (*Response, error) {
 }
 
 // UpdateIndexSetting changes specific index level settings in real time
-// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-update-settings.html
-func (c *client) UpdateIndexSetting(indexName, mapping string) (*Response, error) {
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-update-settings.html
+func (c *client) UpdateIndexSetting(indexName, settings string) (*Response, error) {
 	url := c.Host.String() + "/" + indexName + "/_settings"
-	reader := bytes.NewBufferString(mapping)
+	reader := bytes.NewBufferString(settings)
 	response, err := sendHTTPRequest("PUT", url, reader)
 	if err != nil {
 		return &Response{}, err
@@ -116,7 +116,7 @@ func (c *client) UpdateIndexSetting(indexName, mapping string) (*Response, error
 }
 
 // IndexSettings allows to retrieve settings of index
-// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-get-settings.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-get-settings.html
 func (c *client) IndexSettings(indexName string) (Settings, error) {
 	url := c.Host.String() + "/" + indexName + "/_settings"
 	response, err := sendHTTPRequest("GET", url, nil)
@@ -136,7 +136,7 @@ func (c *client) IndexSettings(indexName string) (Settings, error) {
 }
 
 // IndexExists allows to check if the index exists or not.
-// http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-exists.html
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-exists.html
 func (c *client) IndexExists(indexName string) (bool, error) {
 	url := c.Host.String() + "/" + indexName
 	httpClient := &http.Client{}
@@ -148,12 +148,16 @@ func (c *client) IndexExists(indexName string) (bool, error) {
 	return newReq.StatusCode == http.StatusOK, nil
 }
 
+// GetMapping allows to retrieve mappings for index
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-get-mapping.html
 func (c *client) GetMapping(indexName, datatype string) ([]byte, error) {
 	url := c.Host.String() + "/" + indexName + "/_mapping/" + datatype
 	response, err := sendHTTPRequest("GET", url, nil)
 	return response, err
 }
 
+// PutMapping allows to update mappings for index
+// https://www.elastic.co/guide/en/elasticsearch/reference/5.6/indices-put-mapping.html
 func (c *client) PutMapping(indexName, datatype, mapping string) (*Response, error) {
 	url := c.Host.String() + "/" + indexName + "/_mapping/" + datatype
 	reader := bytes.NewBufferString(mapping)
