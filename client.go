@@ -438,6 +438,8 @@ func sendHTTPRequest(method, url string, body io.Reader) ([]byte, error) {
 
 	if method == "POST" || method == "PUT" {
 		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	} else {
+		req.Header.Set("Content-Type", "application/json")
 	}
 
 	newReq, err := client.Do(req)
