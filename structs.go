@@ -83,6 +83,7 @@ type SearchResult struct {
 	} `json:"_shards"`
 	Hits         ResultHits      `json:"hits"`
 	Aggregations json.RawMessage `json:"aggregations"`
+	Suggest      json.RawMessage `json:"suggest"`
 }
 
 // ResultHits represents the result of the search hits
