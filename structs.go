@@ -59,7 +59,14 @@ type Bulk struct {
 			Type   string `json:"_type"`
 			ID     string `json:"_id"`
 			Status int    `json:"status"`
-			Error  string `json:"error"`
+			Error  struct {
+				Type     string `json:"type"`
+				Reason   string `json:"reason"`
+				CausedBy struct {
+					Type   string `json:"type"`
+					Reason string `json:"reason"`
+				} `json:"caused_by"`
+			} `json:"error"`
 		} `json:"create"`
 		Index struct {
 			Index   string `json:"_index"`
@@ -67,7 +74,14 @@ type Bulk struct {
 			ID      string `json:"_id"`
 			Version int    `json:"_version"`
 			Status  int    `json:"status"`
-			Error   string `json:"error"`
+			Error   struct {
+				Type     string `json:"type"`
+				Reason   string `json:"reason"`
+				CausedBy struct {
+					Type   string `json:"type"`
+					Reason string `json:"reason"`
+				} `json:"caused_by"`
+			} `json:"error"`
 		} `json:"index"`
 	} `json:"items"`
 }

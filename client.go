@@ -274,7 +274,7 @@ func (c *client) Search(indexName, documentType, data string, explain bool) (*Se
 		documentType = documentType + "/"
 	}
 
-	url := c.Host.String() + "/" + indexName + "/" + documentType + "/_search"
+	url := c.Host.String() + "/" + indexName + "/" + documentType + "_search"
 	if explain {
 		url += "?explain"
 	}
@@ -436,11 +436,11 @@ func sendHTTPRequest(method, url string, body io.Reader) ([]byte, error) {
 		return nil, err
 	}
 
-	if method == "POST" || method == "PUT" {
-		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	} else {
-		req.Header.Set("Content-Type", "application/json")
-	}
+	// if method == "POST" || method == "PUT" {
+	// 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	// } else {
+	// }
+	req.Header.Set("Content-Type", "application/json")
 
 	newReq, err := client.Do(req)
 	if err != nil {
