@@ -3,14 +3,17 @@ package elasticsearch_test
 import (
 	"bytes"
 	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
-	"github.com/maximelamure/elasticsearch"
+	// "github.com/maximelamure/elasticsearch"
+	"github.com/walm/elasticsearch"
 )
 
 var (
 	ProductDocumentType       = "PRODUCT"
+	ProductMapping            = `{ "properties": { "colors": { "type": "string" } } }`
 	ESScheme                  = "http"
 	ESHost                    = "localhost"
 	ESPort                    = "9200"
@@ -63,6 +66,21 @@ func TestIndexManagement(t *testing.T) {
 	response, err = client.IndexExists(IndexName)
 	helper.OK(t, err)
 	helper.Assert(t, response, "Index has not been created with the CreateIndex function")
+
+	//Get mappings for type
+	mappings, err := client.GetMapping(IndexName, ProductDocumentType)
+	helper.OK(t, err)
+	helper.Assert(t, string(mappings) == "{}", "Mappings is not empty")
+
+	//Update mappings for type
+	mappingsResponse, err := client.PutMapping(IndexName, ProductDocumentType, ProductMapping)
+	helper.OK(t, err)
+	helper.Assert(t, mappingsResponse.Acknowledged, "Mappings has not been updated")
+
+	//Get updated mappings type
+	mappings, err = client.GetMapping(IndexName, ProductDocumentType)
+	helper.OK(t, err)
+	helper.Assert(t, strings.Contains(string(mappings), `{"colors":{"type":"string"}`), "Mappings has not been updated")
 
 	//Delete the index
 	deleteResponse, err := client.DeleteIndex(IndexName)
@@ -154,8 +172,9 @@ func TestSearch(t *testing.T) {
 		buffer.WriteByte('\n')
 	}
 
-	_, err := client.Bulk(buffer.Bytes())
+	bulkResponse, err := client.Bulk(buffer.Bytes())
 	helper.OK(t, err)
+	helper.Assert(t, len(bulkResponse.Items) == 3, "Bulk did not index all items")
 
 	//We have to wait after a bulk
 	time.Sleep(1500 * time.Millisecond)
@@ -165,16 +184,23 @@ func TestSearch(t *testing.T) {
 	helper.OK(t, err)
 	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
 
-	//MSearch
+	//SearchTemplate
+	_, err = client.CreateSearchTemplate("colorSearch", SearchTemplateColorSearch())
+	helper.Assert(t, err == nil, "Can't create search template colorSearch")
 
+	search, err = client.SearchTemplate(IndexName, SearchByColorSearchTemplate(), false)
+	helper.OK(t, err)
+	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
+
+	//MSearch
 	mqueries := make([]elasticsearch.MSearchQuery, 2)
-	mqueries[0] = elasticsearch.MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{ "query": {"match_all" : {}}, "from" : 0, "size" : 1} }`}
-	mqueries[1] = elasticsearch.MSearchQuery{Header: `{ "index":` + IndexName + `, "type":"` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 2}}`}
+	mqueries[0] = elasticsearch.MSearchQuery{Header: `{ "index": "` + IndexName + `", "type": "` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 1}`}
+	mqueries[1] = elasticsearch.MSearchQuery{Header: `{ "index": "` + IndexName + `", "type": "` + ProductDocumentType + `" }`, Body: `{"query": {"match_all" : {}}, "from" : 0, "size" : 2}`}
 
 	msresult, err := client.MSearch(mqueries)
 	helper.OK(t, err)
-	helper.Assert(t, msresult.Responses[0].Hits.Total == 1, "The msearch doesn't return all matched items")
-	helper.Assert(t, msresult.Responses[1].Hits.Total == 2, "The msearch doesn't return all matched items")
+	helper.Assert(t, len(msresult.Responses[0].Hits.Hits) == 1, "The msearch doesn't return all matched items")
+	helper.Assert(t, len(msresult.Responses[1].Hits.Hits) == 2, "The msearch doesn't return all matched items")
 
 	//Delete the index
 	deleteResponse, err := client.DeleteIndex(IndexName)
@@ -184,12 +210,8 @@ func TestSearch(t *testing.T) {
 
 func BulkIndexConstant(indexName, documentType, id string) string {
 
-	return `{"index":
-				{ "_index": "` + indexName + `",
-				"_type": "` + documentType + `",
-				"_id": "` + id + `"
-				}
-			}`
+	// no new lines
+	return `{"index": { "_index": "` + indexName + `", "_type": "` + documentType + `", "_id": "` + id + `" } }`
 }
 
 func SearchByColorQuery(color string) string {
@@ -200,6 +222,19 @@ func SearchByColorQuery(color string) string {
 					    }
 					}
 			}`
+}
+
+func SearchTemplateColorSearch() string {
+	return `{ "template": { "query": { "match": { "Colors": "{{color}}" } } } }`
+}
+
+func SearchByColorSearchTemplate() string {
+	return `{
+		"id": "colorSearch",
+		"params": {
+			"color": "red"
+		}
+	}`
 }
 
 func TestSuggestion(t *testing.T) {
