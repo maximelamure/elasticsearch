@@ -154,7 +154,7 @@ func TestSearch(t *testing.T) {
 		buffer.WriteByte('\n')
 	}
 
-	_, err := client.Bulk(buffer.Bytes())
+	_, err := client.Bulk(IndexName, buffer.Bytes())
 	helper.OK(t, err)
 
 	//We have to wait after a bulk
@@ -163,7 +163,7 @@ func TestSearch(t *testing.T) {
 	//Search
 	search, err := client.Search(IndexName, ProductDocumentType, SearchByColorQuery("red"), false)
 	helper.OK(t, err)
-	helper.Assert(t, search.Hits.Total == 2, "The search doesn't return all matched items")
+	helper.Assert(t, search.Hits.Total.Value == 2, "The search doesn't return all matched items")
 
 	//MSearch
 
@@ -173,8 +173,8 @@ func TestSearch(t *testing.T) {
 
 	msresult, err := client.MSearch(mqueries)
 	helper.OK(t, err)
-	helper.Assert(t, msresult.Responses[0].Hits.Total == 1, "The msearch doesn't return all matched items")
-	helper.Assert(t, msresult.Responses[1].Hits.Total == 2, "The msearch doesn't return all matched items")
+	helper.Assert(t, msresult.Responses[0].Hits.Total.Value == 1, "The msearch doesn't return all matched items")
+	helper.Assert(t, msresult.Responses[1].Hits.Total.Value == 2, "The msearch doesn't return all matched items")
 
 	//Delete the index
 	deleteResponse, err := client.DeleteIndex(IndexName)

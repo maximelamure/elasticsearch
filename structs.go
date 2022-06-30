@@ -67,7 +67,13 @@ type Bulk struct {
 			ID      string `json:"_id"`
 			Version int    `json:"_version"`
 			Status  int    `json:"status"`
-			Error   string `json:"error"`
+			Error   struct {
+				Type       string `json:"status"`
+				Reason     string `json:"reason"`
+				Index_UUID string `json:"index_uuid"`
+				Shard      string `json:"shard"`
+				Index      string `json:"index"`
+			} `json:"error"`
 		} `json:"index"`
 	} `json:"items"`
 }
@@ -79,6 +85,7 @@ type SearchResult struct {
 	Shards   struct {
 		Total      int `json:"total"`
 		Successful int `json:"successful"`
+		Skipped    int `json:"skipped"`
 		Failed     int `json:"failed"`
 	} `json:"_shards"`
 	Hits         ResultHits      `json:"hits"`
@@ -87,7 +94,10 @@ type SearchResult struct {
 
 // ResultHits represents the result of the search hits
 type ResultHits struct {
-	Total    int     `json:"total"`
+	Total struct {
+		Value    int    `json:"value"`
+		Relation string `json:"relation"`
+	} `json:"total"`
 	MaxScore float32 `json:"max_score"`
 	Hits     []struct {
 		Index     string              `json:"_index"`
