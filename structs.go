@@ -99,14 +99,16 @@ type ResultHits struct {
 		Relation string `json:"relation"`
 	} `json:"total"`
 	MaxScore float32 `json:"max_score"`
-	Hits     []struct {
-		Index     string              `json:"_index"`
-		Type      string              `json:"_type"`
-		ID        string              `json:"_id"`
-		Score     float32             `json:"_score"`
-		Source    json.RawMessage     `json:"_source"`
-		Highlight map[string][]string `json:"highlight,omitempty"`
-	} `json:"hits"`
+	Hits     []Hit   `json:"hits"`
+}
+
+type Hit struct {
+	Index     string              `json:"_index"`
+	Type      string              `json:"_type"`
+	ID        string              `json:"_id"`
+	Score     float32             `json:"_score"`
+	Source    json.RawMessage     `json:"_source"`
+	Highlight map[string][]string `json:"highlight,omitempty"`
 }
 
 // MSearchQuery Multi Search query
