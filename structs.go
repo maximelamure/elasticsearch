@@ -135,8 +135,5 @@ type UpdateByQueryResult struct {
 		Bulk   int `json:"bulk"`
 		Search int `json:"search"`
 	} `json:"retries"`
-	ThrottledMillis      int           `json:"throttled_millis"`
-	RequestsPerSecond    int           `json:"requests_per_second"`
-	ThrottledUntilMillis int           `json:"throttled_until_millis"`
-	Failures             []interface{} `json:"failures"`
+	Failures []interface{} `json:"failures"`
 }
