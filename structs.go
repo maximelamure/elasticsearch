@@ -121,3 +121,22 @@ type MSearchQuery struct {
 type MSearchResult struct {
 	Responses []SearchResult `json:"responses"`
 }
+
+type UpdateByQueryResult struct {
+	Took             int  `json:"took"`
+	TimedOut         bool `json:"timed_out"`
+	Total            int  `json:"total"`
+	Updated          int  `json:"updated"`
+	Deleted          int  `json:"deleted"`
+	Batches          int  `json:"batches"`
+	VersionConflicts int  `json:"version_conflicts"`
+	Noops            int  `json:"noops"`
+	Retries          struct {
+		Bulk   int `json:"bulk"`
+		Search int `json:"search"`
+	} `json:"retries"`
+	ThrottledMillis      int           `json:"throttled_millis"`
+	RequestsPerSecond    int           `json:"requests_per_second"`
+	ThrottledUntilMillis int           `json:"throttled_until_millis"`
+	Failures             []interface{} `json:"failures"`
+}
