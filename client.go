@@ -29,6 +29,7 @@ type Client interface {
 	Suggest(indexName, data string) ([]byte, error)
 	GetIndicesFromAlias(alias string) ([]string, error)
 	UpdateAlias(remove []string, add []string, alias string) (*Response, error)
+	UpdateByQuery(indexName, query string) (*UpdateByQueryResult, error)
 }
 
 // A SearchClient describes the client configuration to manage an ElasticSearch index.
@@ -337,6 +338,26 @@ func (c *client) UpdateAlias(remove []string, add []string, alias string) (*Resp
 	}
 
 	return esResp, nil
+}
+
+// UpdateByQuery updates documents that match the specified query.
+// https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update-by-query.html
+func (c *client) UpdateByQuery(indexName, query string) (*UpdateByQueryResult, error) {
+	url := c.Host.String() + "/" + indexName + "/_update_by_query"
+	reader := bytes.NewBufferString(query)
+	response, err := sendHTTPRequest("POST", url, reader)
+	if err != nil {
+		return &UpdateByQueryResult{}, err
+	}
+
+	esResp := &UpdateByQueryResult{}
+	err = json.Unmarshal(response, esResp)
+	if err != nil {
+		return &UpdateByQueryResult{}, err
+	}
+
+	return esResp, nil
+
 }
 
 func getAliasQuery(remove []string, add []string, alias string) string {

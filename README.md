@@ -27,6 +27,8 @@ CRUD:
 Process:
 
 * Bulk
+* UpdateByQuery
+
 
 Queries:
 
